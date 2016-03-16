@@ -1,0 +1,457 @@
+<!DOCTYPE HTML>
+<!--
+   Copyright 2014 - 2016 FUJISTU LIMITED
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<html lang="ja" manifest="tenken.appcache">
+<head>
+
+	<meta charset="UTF-8"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+	<meta name="copyright" content="Copyright 2014-2015 FUJITSU LIMITED">
+
+	<title>AR</title>
+
+	<style>
+	* {
+		font-size:103%;
+	}
+	html, body {
+		width:100%;
+		height:100%;
+	}
+	body {
+		padding:0px;
+		margin:0px;
+		background:dimgray url(image/slash.png);
+		display: -webkit-box;
+		-webkit-box-align: center;
+		-webkit-box-pack: center;
+	}
+	input {
+		width:100%;
+		margin:0.3em 0px 0px 0px;
+		line-height:150%;
+		font-size:125%;
+	}
+	select {
+		width:100%;
+		font-size:125%;
+	}
+	hr {
+		margin:1em 0em 1em 0em;
+	}
+	#popmenu {
+		width:32em;
+		height:28em;
+		border:10px solid #333333;
+		border-radius:20px;
+		background:FloralWhite;
+		display: -webkit-box;
+		-webkit-box-align: center;
+		-webkit-box-pack: center;
+	}
+	#btnnext {
+		width:50%;
+		height:2em;
+	}
+	#btndwnld {
+		width:90%;
+		height:2em;
+	}
+	#lastdownload, #lastscenario {
+		font-size:80%;
+		text-align: left;
+		color:red;
+	}
+	#armode {
+		background:black;
+		color:white;
+		text-align:right;
+	}
+
+	</style>
+    <script src="lib/q.js"></script>
+	<script src="ar/ar.js"></script>
+	<script src="tenkenconst.js"></script>
+	<script src="tenkenARdata.js"></script>
+	<script src="tenken.js"></script>
+	<script src="tenkenstorage.js"></script>
+	<script src="tenkenchecklistform.js"></script>
+	<script src="tenkendata.js"></script>
+
+	<script>
+
+	// キャッシュされたindex.htmlの場合onLoadイベントが呼ばれないため、
+	// DOMContentLoadedイベントを利用する
+	window.addEventListener("DOMContentLoaded", function() {Tenken.Storage.init().then(init).fail(function(){alert("Exceptions : init\n"+ e)})}, false);
+
+	// ウィンドウアンロード前イベントリスナの登録。
+	window.addEventListener("beforeunload", function(e) {
+		try
+		{
+			if ( TenkenData.AllGet.getPhaseScenario() == true  )
+			{
+				return("現在データを取得中です。\n時間を置いて再度実行してください。\n\n画面を強制移動しますか？")
+			}
+		}
+		catch(e)
+		{
+			// 多重呼び出し回避用のcatch。処理は無しです。
+			// レンダリングエンジンによっては効果が無い場合があります。
+		}
+	});
+
+	// オフラインストレージ設定のonErrorに設定するコールバック関数です。
+	useOfflineStorageError = function(_result)
+	{
+		var message = "オフラインストレージの設定に失敗しました。";
+		var detail = _result.getStatus() + "\n"+ _result.getValue();
+		Tenken.Util.logerr(message, detail);
+	};
+
+
+	function updateSelectScenario()
+	{
+		try {
+		TenkenData.Scenario.selectScenarioNameHTML(document.formScenaio.selectScenarioId);
+		selectChangeScenario(Tenken.Storage.ScenarioId.get());
+		}
+		catch (e)
+		{
+			alert("exception : updateSelectScenario\n" + e);
+		}
+	}
+
+	function getDownloadScenarioDatetime()
+	{
+		var str="";
+		var downloadDatetime = Tenken.Storage.DownloadScenario.get();
+		if ( null != downloadDatetime )
+		{
+			str += "前回のダウンロード日時：";
+			str += new Tenken.DatetimeValue(downloadDatetime).toString();
+		}
+		return(str);
+	}
+
+
+	// ダウンロードボタン状態表示変更
+	// _color : 前回のダウンロード日時表示部の文字色(デフォルトはred)
+	// _msg   : 前回のダウンロード日時表示部の文字
+	function setLastDownloadStatus(_color, _msg)
+	{
+		var elmLastDownload=document.getElementById("lastdownload");
+		if ( null != elmLastDownload )
+		{
+			elmLastDownload.style.color=_color;
+			elmLastDownload.innerHTML=_msg;
+		}
+	}
+
+	// ダウンロード中の表示切り替え
+	// _mode  : true:ダウンロード中 false:ダウンロード前または完了
+	// _color : 前回のダウンロード日時表示部の文字色(デフォルトはred)
+	// _msg   : 前回のダウンロード日時表示部の文字
+	function setDownloadMode(_mode, _color, _msg)
+	{
+		setLastDownloadStatus(_color, _msg);
+
+		var elmBtnDwn=document.getElementById("btndwnld");
+		if ( null != elmBtnDwn )  elmBtnDwn.disabled = _mode;
+
+		var elmBtnNext=document.getElementById("btnnext");
+		if ( null != elmBtnNext )  elmBtnNext.disabled = _mode;
+
+		var elmBtnSelect=document.getElementById("selectScenarioId");
+		if ( null != elmBtnSelect )  elmBtnSelect.disabled = _mode;
+		if ( true == _mode )
+		{
+			document.getElementById("lastscenario").innerHTML="";
+		}
+	}
+
+	function setModeStatus()
+	{
+		var elmMode=document.getElementById("armode");
+		if ( null != elmMode )
+		{
+			var strMode="動作モード：";
+			var opmode=Tenken.Storage.OperationMode.get();
+			switch ( opmode )
+			{
+			case "serverMode":
+				strMode += "サーバ通信モード";
+				break;
+			case "standAloneMode":
+				strMode += "スタンドアローンモード";
+				break;
+			default:
+				strMode += "不明";
+				break;
+			}
+			elmMode.innerHTML=strMode;
+		}
+	}
+
+	// ダウンロード成功
+	function downloadSuccess()
+	{
+
+		if(  "serverMode" == Tenken.Storage.OperationMode.get() )
+		{
+			alert("シナリオ情報の取得が完了しました。");
+		}
+		else
+		{
+			alert("シナリオ情報の取得が完了しました。\n\nスタンドアローンモードのため、オフラインストレージから取得された可能性があります。");
+		}
+
+		// ダウンロード日時を保存・表示します。
+		downloadDatetime = new Date().getTime();
+		Tenken.Storage.DownloadScenario.set(downloadDatetime);
+		setDownloadMode(false, "", getDownloadScenarioDatetime())
+
+		// シナリオ名の選択状態を更新表示
+		updateSelectScenario();
+
+	}
+
+	// ダウンロード失敗
+	function downloadError(_errorMsg)
+	{
+		setDownloadMode(false, "", "");
+
+		alert("AR実行サーバのデータ取得に失敗しました。\n動作モードとネットワーク状況を確認して再度お試しください。\nネットワークがオンライン状態の場合には、AR重畳表示アプリケーションを再起動してください。\n\n" + _errorMsg);
+	}
+
+	function getOperationModeSuccess(_result)
+	{
+		//取得した動作モードを変数に格納します。
+		var operationMode = _result.getValue();
+		Tenken.Storage.OperationMode.set(operationMode);
+
+		setModeStatus();
+
+	}
+	function getOperationModeSuccessWithDownload(_result)
+	{
+		//取得した動作モードを変数に格納します。
+		var operationMode = _result.getValue();
+		Tenken.Storage.OperationMode.set(operationMode);
+
+		//サーバ通信モードの場合は強制読み込み
+		var mode = ("serverMode" == operationMode) ? true : false;
+
+		setModeStatus();
+
+		// シナリオデータダウンロード
+		TenkenData.AllGet.downloadScenario(mode, downloadSuccess.bind(this), downloadError.bind(this));
+
+	}
+	function getOperationModeError(_result)
+	{
+		setModeStatus();
+		var message = "動作モードの取得に失敗しました。\n";
+		var detail = _result.getStatus() + "\n"+ _result.getValue();
+		Tenken.Util.logerr(message, detail);
+	}
+
+	function downloadResource()
+	{
+		try
+		{
+            AR.OS.isOnline(
+                function(_result){
+                    if(_result.getValue() == false || Tenken.Storage.OperationMode.get() ==  "standAloneMode") {
+                        alert("ネットワークがオフラインです。オンラインで実行してください。");
+                    } else {
+                        if ( Tenken.Storage.ScenarioId.get() )
+                        {
+                            if ( confirm("作業中のシナリオがあります。全データが破棄されますがよろしいですか?\n") != true )
+                            {
+                                return;
+                            }
+                        }
+                        if ( TenkenData.AllGet.getPhaseScenario() == true )
+                        {
+                            alert("現在データを取得中です。\n時間を置いて再度実行してください。");
+                            return;
+                        }
+
+                        Tenken.Storage.clear();
+                        setDownloadMode(true, "blue", "ダウンロード中です。完了までお待ちください。");
+
+                        // シナリオ名の選択状態を更新表示
+                        updateSelectScenario();
+
+                        //動作モードを取得してローカルストレージに保存します。
+                        //動作モード取得が成功した場合、そのままデータのダウンロードを
+                        //コールバックで行います。
+                        Tenken.Util.getOperationMode(getOperationModeSuccessWithDownload.bind(this), getOperationModeError.bind(this));
+                    }
+                },
+                function(_result){
+                    alert("Exception :AllGet.download\n" + _result.getValue());
+                });
+		}
+		catch (e)
+		{
+			alert("Exception: index.html:downloadResource\n" + e );
+		}
+	}
+	function nextPage()
+	{
+		try {
+			if ( TenkenData.AllGet.getPhaseScenario() == true )
+			{
+				alert("現在データを取得中です。\n時間を置いて再度実行してください。");
+				return;
+			}
+
+			var savedScenarioId = Tenken.Storage.ScenarioId.get();
+			var setScenarioId = document.getElementById("selectScenarioId").value;
+
+			if("" == setScenarioId ) {
+				alert("点検シナリオを選択してください。");
+				return;
+			}
+
+			// 選択中のシナリオIDを保存します。
+			Tenken.Storage.ScenarioId.set(setScenarioId);
+
+			location.href = TenkenConst.PageName.pre;
+		}
+		catch (e)
+		{
+			alert(e);
+		}
+	}
+
+	function showScenarioSelect()
+	{
+		var str="";
+		if ( AR.Native.isWindows() == true )
+		{
+			str += '<select id="selectScenarioId" name="selectScenarioId" size="3">';
+		}
+		else
+		{
+			str += '<select id="selectScenarioId" name="selectScenarioId">';
+		}
+		str += '<option value="">選んでください</option>';
+		str += '</select>';
+		return(str);
+	}
+
+	// 指定したシナリオIDに対応したシナリオ名を選択した状態して表示します
+	function selectChangeScenario(_senarioid)
+	{
+		var elmSel = document.getElementById("selectScenarioId");
+		if ( elmSel )
+		{
+			if ( null == _senarioid || "" == _senarioid )
+			{
+				elmSel.options[0].selected = true;
+				return;
+			}
+			for ( var i=0 ; i < elmSel.length ; i++ )
+			{
+				if ( elmSel.options[i].value == _senarioid )
+				{
+					elmSel.options[i].selected = true;
+					break;
+				}
+			}
+		}
+	}
+
+	// 作業中のシナリオ名を表示します。
+	function getLastScenario(elmid)
+	{
+		var str="";
+		var savedScenario = Tenken.Storage.ScenarioId.get();
+		if ( null != savedScenario )
+		{
+			str += "作業中シナリオ：";
+			TenkenData.Scenario.getScenarioNameFromId(savedScenario)
+                    .then(function(name){
+                        if ( null != name )
+                        {
+                            str += name;
+                        }
+                        document.getElementById(elmid).innerHTML=str;
+                        selectChangeScenario(savedScenario);
+                    })
+                    .fail(function(){alert("Exception : getLastScenario\n" +e);});
+		} else {
+            selectChangeScenario(savedScenario);
+        }
+	}
+
+
+	 // ページを初期化します。
+	function init() {
+		//オフラインストレージをONに設定します。
+		AR.Data.useOfflineStorage(true, function(_result){},useOfflineStorageError);
+
+		// シナリオ名の選択状態を更新表示
+		updateSelectScenario();
+
+        getLastScenario("lastscenario");
+
+		// 動作モードを取得する
+		Tenken.Util.getOperationMode(getOperationModeSuccess.bind(this), getOperationModeError.bind(this));
+	}
+
+	</script>
+
+</head>
+
+<body>
+
+	<div id="popmenu">
+		<form name="formScenaio">
+		<div id="armode">動作モード</div><br>
+		<label>
+			(1) 点検シナリオの情報をダウンロードします。<br>
+			<div style="text-align:center;">
+				<input id="btndwnld" type="button" value="シナリオ情報ダウンロード" onclick="downloadResource()"  data-ar-eventtype="SCENARIO_PREDOWNLOAD">
+				<br>
+				<b id="lastdownload"><script>document.write(getDownloadScenarioDatetime());</script> </b>
+			</div>
+		</label>
+		<hr>
+		<label>
+			(2) シナリオを選択します。<br>
+			<div style="text-align:center;">
+				<section>
+					<script>document.write(showScenarioSelect());</script>
+					<br>
+					<b id="lastscenario"></b>
+				</section>
+			</div>
+		</label>
+		<hr>
+		<div style="text-align:center;">
+			<input id="btnnext" type="button" value="次へ" onclick="nextPage()"  data-ar-eventtype="SCENARIO_START">
+			<br>
+		</div>
+		<br>
+
+		</form>
+	</div>
+
+</body>
+</html>

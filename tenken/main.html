@@ -1,0 +1,86 @@
+﻿<!DOCTYPE HTML>
+<!--
+   Copyright 2014 - 2016 FUJISTU LIMITED
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<html lang="ja" manifest="tenken.appcache" style="overflow: auto;">
+
+<head>
+
+	<meta charset="UTF-8"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+	<meta name="copyright" content="Copyright 2014-2015 FUJITSU LIMITED">
+
+	<title>AR</title>
+
+	<link rel="stylesheet" href="tenkengui.css">
+    <script src="lib/q.js"></script>
+	<script src="ar/ar.js"></script>
+	<script src="tenkenconst.js"></script>
+	<script src="tenkenARdata.js"></script>
+	<script src="tenken.js"></script>
+	<script src="tenkenstorage.js"></script>
+	<script src="tenkenchecklistform.js"></script>
+	<script src="tenkenrendering.js"></script>
+	<script src="tenkendata.js"></script>
+	<script src="tenkengui.js"></script>
+    <script src="tenkenmsglist.js"></script>
+
+	<script>
+
+	</script>
+    <style> <item name="android:windowTranslucentStatus">true</item></style>
+
+</head>
+<body data-ar-content="0" style="overflow: auto;">
+	<section id="header">
+		<ul id="header_title">
+			<li id="header_title_1" class="ellipsislabel"><span class="iconlabel"><script>document.write(Tenken.GUI.escapeHTML(Tenken.GUI.TenkenValue.instance.name))</script></span>
+			<li id="header_title_2" class="ellipsislabel">
+			<li id="header_title_3" class="ellipsislabel"><span class="iconlabel"><script>document.write(Tenken.GUI.escapeHTML(Tenken.GUI.TenkenValue.instance.operator))</script></span>
+			<li id="header_title_4" class="ellipsislabel"><script>document.write(Tenken.GUI.getARModeStatus())</script>
+			<li id="header_title_5" class="ellipsislabel"><span class="iconlabel"><script>document.write(Tenken.GUI.escapeHTML(Tenken.GUI.TenkenValue.instance.datetime.toString()))</script> 開始</span><!-- アイコンはないが、iconlabelスタイルを適用したい -->
+		</ul>
+		<ul id="header_menu">
+			<li id="header_menu_1"><a href="javascript:Tenken.GUI.Page.changePage(1)" class="ellipsislabel" data-ar-eventtype="AR_MENU_SUBMIT"><span class="iconlabel">結果送信</span></a>
+			<li id="header_menu_2"><a href="javascript:Tenken.GUI.Page.changePage(2)" class="ellipsislabel" data-ar-eventtype="AR_MENU_CHECKLIST"><span class="iconlabel">点検項目一覧</span></a>
+			<li id="header_menu_3"><a href="javascript:Tenken.GUI.Page.changePage(3)" class="ellipsislabel" data-ar-eventtype="AR_MENU_MESSAGELIST"><span class="iconlabel">申し送り一覧</span></a>
+			<!-- <li id="header_menu_4"><a href="javascript:Tenken.GUI.Page.changePage(4)" class="ellipsislabel"><span class="iconlabel">申し送り追加</span></a> 非メニューページ -->
+		</ul>
+		<ul id="header_inputmsg">
+			<li id="heheader_inputmsg_1" class="ellipsislabel" >申し送り入力
+			
+		</ul>
+		<ul id="header_completemsg">
+			<li id="header_completemsg_1" class="ellipsislabel" >申し送り完了報告入力
+			
+		</ul>
+	</section>
+	<section id="summary"></section>
+	<section id="content"></section>
+	<section id="footer">
+		<a href="javascript:Tenken.GUI.Page.changePage(0)"><span class="iconlabel">閉じる</span></a>
+	</section>
+
+    <section class="scenetoggle" id="scenetoggle"></section>
+	<input type="button" id="stopcamera" value="" onclick="Tenken.GUI.stopCamera()">
+	<input type="button" id="startcamera" value="" onclick="Tenken.GUI.startCamera()">
+
+    <input type="button" class="move" id="moveleft" style="display: none;" value="←" onclick="Tenken.GUI.moveLeft()">
+    <input type="button" class="move" id="moveright" style="display: none;" value="→" onclick="Tenken.GUI.moveRight()">
+
+    <div id="id-comboBox-popup" style="display: none; top: 0px; left: 0px;"></div>
+
+</body>
+</html>

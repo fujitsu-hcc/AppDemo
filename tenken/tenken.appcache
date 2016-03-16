@@ -1,0 +1,87 @@
+﻿CACHE MANIFEST
+
+##########################################################
+#   Copyright 2014 - 2016 FUJISTU LIMITED
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+##########################################################
+
+#ver 20141001_0001
+
+#キャッシュするリソースを指定します。
+CACHE:
+# ソース類
+ ar/ar.js
+ index.html
+ pre.html
+ main.html
+ tenken.js
+ tenkenconst.js
+ tenkenchecklistform.js
+ tenkenARdata.js
+ tenkenstorage.js
+ tenkendata.js
+ tenkengui.js
+ tenkengui.css
+ tenkenrendering.js
+ tenkenmsglist.js
+ lib/q.js
+
+# アイコン・イメージ
+ image/line.gif
+ image/slash.png
+ image/icon-dark/mdpi/scenario-01.png
+ image/icon-dark/mdpi/user.png
+ image/icon-dark/mdpi/upload.png
+ image/icon-dark/mdpi/check-list.png
+ image/icon-dark/mdpi/message-list.png
+ image/icon-dark/mdpi/close.png
+ image/icon-dark/mdpi/list.png
+ image/icon-dark/mdpi/message-list.png
+ image/icon-dark/mdpi/caution.png
+ image/icon-dark/xdpi/accept.png
+ image/icon-dark/xdpi/add-message.png
+ image/icon-dark/xdpi/AF.png
+ image/icon-dark/xdpi/check-list.png
+ image/icon-dark/xdpi/close.png
+ image/icon-dark/xdpi/cloud.png
+ image/icon-dark/xdpi/discard.png
+ image/icon-dark/xdpi/edit-check-list.png
+ image/icon-dark/xdpi/edit.png
+ image/icon-dark/xdpi/exchange.png
+ image/icon-dark/xdpi/graph-reference.png
+ image/icon-dark/xdpi/grid.png
+ image/icon-dark/xdpi/list.png
+ image/icon-dark/xdpi/live.png
+ image/icon-dark/xdpi/maintenance-info.png
+ image/icon-dark/xdpi/manual.png
+ image/icon-dark/xdpi/message-list.png
+ image/icon-dark/xdpi/overflow.png
+ image/icon-dark/xdpi/pause.png
+ image/icon-dark/xdpi/rain.png
+ image/icon-dark/xdpi/refresh.png
+ image/icon-dark/xdpi/setting.png
+ image/icon-dark/xdpi/snow.png
+ image/icon-dark/xdpi/stock-list.png
+ image/icon-dark/xdpi/sun.png
+ image/icon-dark/xdpi/upload.png
+ image/icon-dark/xdpi/user.png
+
+#サーバに接続する必要のあるリソースを指定します。
+NETWORK:
+  *
+ 
+
+#リソースにアクセスできない場合の代替リソースを指定します。
+FALLBACK:
+
