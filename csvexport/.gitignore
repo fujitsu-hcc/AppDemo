@@ -1,0 +1,11 @@
+# Java class files
+/bin
+
+# Generated files
+/out/*.jar
+
+# IDE files
+.settings
+.project
+.classpath
+.idea
