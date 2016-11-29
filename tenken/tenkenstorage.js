@@ -23,7 +23,7 @@ Tenken.Storage = {};
 var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
 Tenken.Storage.isDB = function(){
     //Windows版ARアプリはIndexedDBが使用できない
-    return navigator.userAgent.match(/(Windows)/)==null && !!indexedDB };
+    return navigator.userAgent.match(/(Windows)/)==null && !!indexedDB;
 };
 
 Tenken.Storage.init = function(){
